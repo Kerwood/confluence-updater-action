@@ -1,0 +1,61 @@
+name: "Confluence Updater"
+description: "Renders a markdown file to HTML and updates a Confluence Cloud page with the result."
+author: "Patrick Kerwood"
+branding:
+  color: blue
+  icon: cloud
+inputs:
+  fqdn:
+    description: The fully qualified domain name of your Atlassian Cloud tenant.
+    required: true
+
+  user:
+    description: Confluence user to authenticate with.
+    required: true
+
+  api_token:
+    description: The token/secret to use. https://id.atlassian.com/manage-profile/security/api-tokens
+    required: true
+
+  config_path:
+    description: The full path to the config file.
+    required: false
+    default: ./confluence-updater.yaml
+
+  labels:
+    description: A space seperated list of labels to add to all pages.
+    required: false
+    default: ""
+
+  log_level:
+    description: Log Level. Possible values are trace, debug, info, warn, error
+    required: false
+    default: info
+
+  version:
+    description: Version of Confluence Updater
+    required: false
+    default: v2.0.0
+
+runs:
+  using: composite
+  steps:
+    - id: confluence-updater
+      name: Update Confluence Pages
+      shell: bash
+      run: |
+        curl -sSL https://github.com/Kerwood/confluence-updater/releases/download/${{ inputs.version }}/confluence-updater-x86_64-unknown-linux-musl -o confluence-updater
+        chmod +x confluence-updater
+
+        LABELS=""
+        if [[ -n "${{ inputs.labels }}" ]]; then
+          LABELS="-l $(echo "${{ inputs.labels }}" | sed 's/ / -l /g')"
+        fi
+
+        ./confluence-updater \
+          --config-path ${{ inputs.config_path }} \
+          --user ${{ inputs.user }} \
+          --secret ${{ inputs.api_token }} \
+          --fqdn ${{ inputs.fqdn }} \
+          --log-level ${{ inputs.log_level }} \
+          $LABELS
