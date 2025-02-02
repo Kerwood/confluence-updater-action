@@ -35,7 +35,7 @@ inputs:
   version:
     description: Version of Confluence Updater
     required: false
-    default: v2.0.0
+    default: latest
 
 runs:
   using: composite
@@ -44,7 +44,20 @@ runs:
       name: Update Confluence Pages
       shell: bash
       run: |
-        curl -sSL https://github.com/Kerwood/confluence-updater/releases/download/${{ inputs.version }}/confluence-updater-x86_64-unknown-linux-musl -o confluence-updater
+        VERSION=${{ inputs.version }}
+
+        if [[ $VERSION == "latest" ]]; then
+          VERSION=$(curl -sL "https://api.github.com/repos/kerwood/confluence-updater/releases" | jq  -r '.[0] | .tag_name')
+        fi
+
+        VERSION_IS_VALID=$(curl -sL "https://api.github.com/repos/kerwood/confluence-updater/releases" | jq "[.[] | .tag_name] | index(\"${VERSION}\") != null")
+
+        if [[ $VERSION_IS_VALID == "false" ]]; then
+          echo "ERROR: Version number not valid: ${VERSION}"
+          exit 2
+        fi
+
+        curl -sSL "https://github.com/Kerwood/confluence-updater/releases/download/${VERSION}/confluence-updater-x86_64-unknown-linux-musl" -o confluence-updater
         chmod +x confluence-updater
 
         LABELS=""
