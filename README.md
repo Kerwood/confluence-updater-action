@@ -32,6 +32,6 @@ jobs:
           api_token: ${{ secrets.API_TOKEN }}
 
           # Optional
-          version: 2.0.0 # Will default to latests version
+          version: v2.0.0 # Will default to "latest"
           labels: "github-action $GITHUB_REPOSITORY" # Global labels that is added to all Confluece pages.
 ```
